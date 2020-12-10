@@ -15,3 +15,4 @@ for i in range(1,iteraciones+1):
   volumen=volumen+seccion
 print("el volumen del generado por la diferencia entre el cubo y el cono es: ")
 print(volumen)
+print("Hola qué tal")
