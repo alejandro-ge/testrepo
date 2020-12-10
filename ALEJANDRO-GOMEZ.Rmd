@@ -1,0 +1,145 @@
+---
+title: "Taller 02 - Programación Con R"
+author: "Alejandro Gómez"
+date: "08-12-2020"
+output: html_document
+---
+## Introducción
+Como hemos podido conversar previamente, la ciencia de
+datos puede ser aplicada en diferentes campos donde se
+requiera dar valor a los datos resolviendo problemas complejos.
+Sin embargo, cada problema comienza con una exploración y
+reconocimiento de los datos.
+En esta oportunidad se desea realizar un sistema
+recomendador de películas, para lo cual se comenzará
+analizando un set de películas que cierta empresa de
+streaming proporciona a sus clientes.
+El objetivo es generar un informe que contenga algunas
+características de las películas que posee el catálogo.
+
+## Pregunta I
+Realice un único flujo que, usando solo aquellas películas de
+USA con clasificación R y que poseen información respecto a
+su presupuesto, considerando solo los campos Nombre,
+Presupuesto, Ingresos, Score, Votos y Año, se pueda crear dos
+variables nuevas; Utilidad = ingresos – presupuesto y Score
+Corregido = score *[(votos - 1)/votos], y luego, pueda realizar
+un resumen anual con cuatro columnas: Película con mayor
+utilidad, película con mayor ingreso, película con mayor score
+corregido y película con más votos.
+
+```{r echo = FALSE, warning=FALSE, message=FALSE, error = FALSE}
+options(scipen =999)
+library(tidyverse)
+library(readr)
+peliculas <- read_csv("C:/Users/aleja/Desktop/Diplomado/02 R/Talleres/Taller 02/peliculas.csv")
+peliculas_parte1=peliculas %>% 
+  dplyr::filter(country=="USA",rating=="R",budget>0) %>% 
+  dplyr::select(name,budget,gross, score,votes,year) %>% 
+  dplyr::mutate(utilidad=gross-budget) %>% 
+  dplyr::mutate(score_corregido=score*((votes-1)/votes)) %>% 
+  dplyr::group_by(year) %>% 
+  dplyr::summarise(mayorUtilidad=name[utilidad==max(utilidad)],mayorIngreso=name[gross==max(gross)],mayorScore=name[score_corregido==max(score_corregido)],mayorVotos=name[votes==max(votes)])
+knitr::kable(as.data.frame(peliculas_parte1))
+
+```
+
+## Pregunta II
+Realice una "sección" para cada género que considere solo películas de la década de los 90, que reporte:
+- La(s) estrella(s) que participa(n) en la película con mayor ingreso.
+- La(s) estrella(s) que estuvo en la película con mayor score.
+- Una tabla con las primeras 5 películas con más votos,
+- Una tabla que entregue el total de presupuesto y el promedio de duración de todas las películas, en horas, por año.
+
+```{r echo = FALSE, warning=FALSE, message=FALSE, error = FALSE}
+library(purrr)
+seccion = function(x){
+  print(paste("Genero",x$genre[1]))
+  cat("\n")
+  print(paste("Estrella película mayor ingreso: ",x$star[x$gross==max(x$gross)]))
+  print(paste("Estrella película mayor puntaje: ",x$star[x$score==max(x$score)]))
+  print("Las películas 5 más votadas del género son: ")
+  print(as.data.frame(head(x[,c(7,13)],n=5)))
+  
+  
+  #print(head(x$name,n=5))
+  cat("\n")
+  tablaParteII=x %>% 
+    dplyr::group_by(year) %>% 
+    dplyr::summarise(totalPresupuesto=sum(budget),duracionPromedio=mean(runtime/60,na.rm = TRUE))
+  
+  print("Total de presupuesto y promedio de duración de las películas, en horas, por año.")
+  print(as.data.frame(tablaParteII))
+  cat("\n")
+  cat("\n")
+  cat("\n")
+  cat("\n")
+}
+
+peliculas_parte2=peliculas%>% 
+  dplyr::filter(year>=1990,year<2000) %>%
+  dplyr::arrange(desc(votes)) %>% 
+  dplyr::group_split(genre) %>% 
+  purrr::map(seccion)
+```
+
+
+
+
+## PARTE III
+Realice un método funcional que a partir de dos variables resuelva los siguientes problemas:
+
+Cuales son los escritores que participaron en más de una película del mismo género. Reporte una tabla que contenga el # nombre del escritor, y en las columnas los géneros, tal que el contenido sea la frecuencia.
+
+```{r echo = FALSE, warning=FALSE, message=FALSE, error = FALSE}
+options(scipen =999)
+library(tidyverse)
+library(readr)
+library(purrr)
+parte3=function(x,y){
+  df=as.data.frame.matrix(table(x,y))
+  df$maximo=apply(df[,2:ncol(df)],1, max)
+  df=dplyr::filter(df,maximo>1)
+  return(df)
+}
+writersPerGenre=parte3(peliculas$writer,peliculas$genre)
+#starPerCountry=parte3(peliculas$star,peliculas$country)
+#directorPerCountry=parte3(peliculas$director,peliculas$country)
+knitr::kable(writersPerGenre)
+```
+
+De la misma forma, determine esta relación entre estrellas y PAIS. 
+```{r echo = FALSE, warning=FALSE, message=FALSE, error = FALSE}
+options(scipen =999)
+library(tidyverse)
+library(readr)
+library(purrr)
+parte3=function(x,y){
+  df=as.data.frame.matrix(table(x,y))
+  df$maximo=apply(df[,2:ncol(df)],1, max)
+  df=dplyr::filter(df,maximo>1)
+  return(df)
+}
+#writersPerGenre=parte3(peliculas$writer,peliculas$genre)
+starPerCountry=parte3(peliculas$star,peliculas$country)
+#directorPerCountry=parte3(peliculas$director,peliculas$country)
+knitr::kable(starPerCountry)
+```
+
+Finalmente determine la misma relación entre directores y países.
+```{r echo = FALSE, warning=FALSE, message=FALSE, error = FALSE}
+options(scipen =999)
+library(tidyverse)
+library(readr)
+library(purrr)
+parte3=function(x,y){
+  df=as.data.frame.matrix(table(x,y))
+  df$maximo=apply(df[,2:ncol(df)],1, max)
+  df=dplyr::filter(df,maximo>1)
+  return(df)
+}
+#writersPerGenre=parte3(peliculas$writer,peliculas$genre)
+#starPerCountry=parte3(peliculas$star,peliculas$country)
+directorPerCountry=parte3(peliculas$director,peliculas$country)
+knitr::kable(directorPerCountry)
+```
